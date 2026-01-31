@@ -181,53 +181,6 @@ const Dashboard = () => {
                 </div>
             ) : (
                 <>
-                    {/* Progress Summary Cards */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '2.5rem' }}>
-                        <div className="card" style={{ borderLeft: '4px solid #2563eb', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <span style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: 'bold' }}>TOTAL APPLIED</span>
-                            <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#1e40af' }}>{appStats.total}</span>
-                        </div>
-                        <div className="card" style={{ borderLeft: '4px solid #f59e0b', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <span style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: 'bold' }}>PENDING</span>
-                            <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#92400e' }}>{appStats.pending}</span>
-                        </div>
-                        <div className="card" style={{ borderLeft: '4px solid #10b981', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <span style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: 'bold' }}>SHORTLISTED</span>
-                            <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#065f46' }}>{appStats.shortlisted}</span>
-                        </div>
-                        <div className="card" style={{ borderLeft: '4px solid #ef4444', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <span style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: 'bold' }}>REJECTED</span>
-                            <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#991b1b' }}>{appStats.rejected}</span>
-                        </div>
-                    </div>
-
-                    {/* Profile Summary Section */}
-                    <div className="card" style={{ marginBottom: '2rem', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-                        <h3 style={{ margin: '0 0 1rem 0' }}>👤 Your Smart Profile</h3>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                            <div>
-                                <p style={{ margin: '0.25rem 0', opacity: 0.9 }}><strong>Name:</strong> {user.fullName || 'Not extracted'}</p>
-                                <p style={{ margin: '0.25rem 0', opacity: 0.9 }}><strong>Email:</strong> {user.email || 'Not available'}</p>
-                            </div>
-                            <div>
-                                <p style={{ margin: '0.25rem 0', opacity: 0.9 }}><strong>Skills:</strong> {user.seekerProfile?.skills || 'None detected'}</p>
-                                <p style={{ margin: '0.25rem 0', opacity: 0.9 }}><strong>Profile Score:</strong> {user.seekerProfile?.profileScore || 0}/100</p>
-                            </div>
-                        </div>
-                        <Link to="/resume" style={{
-                            display: 'inline-block',
-                            marginTop: '1rem',
-                            padding: '0.5rem 1rem',
-                            background: 'white',
-                            color: '#667eea',
-                            borderRadius: '0.5rem',
-                            textDecoration: 'none',
-                            fontWeight: 'bold'
-                        }}>
-                            Update Resume
-                        </Link>
-                    </div>
-
                     <div className="search-container">
                         <input
                             type="text"

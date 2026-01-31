@@ -3,6 +3,7 @@ package com.jobportal.controller;
 import com.jobportal.entity.Application;
 import com.jobportal.service.ApplicationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
@@ -24,8 +25,8 @@ public class ApplicationController {
     @Autowired
     private ApplicationService applicationService;
 
-    // Hardcoded for now, should match properties
-    private final Path rootLocation = Paths.get("uploads/resumes");
+    @Value("${file.upload-dir}")
+    private String uploadDir;
 
     @PostMapping("/{jobId}/apply")
     public Application applyJob(@PathVariable Long jobId,
@@ -54,12 +55,20 @@ public class ApplicationController {
     @GetMapping("/download/{filename:.+}")
     public ResponseEntity<Resource> downloadFile(@PathVariable String filename) {
         try {
-            Path file = rootLocation.resolve(filename);
+            Path rootLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
+            Path file = rootLocation.resolve(filename).normalize();
+
+            // Security check - ensure file is within upload directory
+            if (!file.startsWith(rootLocation)) {
+                throw new RuntimeException("Cannot access file outside upload directory");
+            }
+
             Resource resource = new UrlResource(file.toUri());
-            if (resource.exists() || resource.isReadable()) {
+            if (resource.exists() && resource.isReadable()) {
                 return ResponseEntity.ok()
+                        .contentType(MediaType.APPLICATION_PDF)
                         .header(HttpHeaders.CONTENT_DISPOSITION,
-                                "attachment; filename=\"" + resource.getFilename() + "\"")
+                                "inline; filename=\"" + resource.getFilename() + "\"")
                         .body(resource);
             } else {
                 throw new RuntimeException("Could not read file: " + filename);
