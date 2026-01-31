@@ -3,6 +3,7 @@ services:
     name: job-portal-backend
     env: java
     region: ohio
+    rootDir: backend
     buildCommand: mvn clean package -DskipTests
     startCommand: java -jar target/*.jar
     envVars:
