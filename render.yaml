@@ -10,7 +10,7 @@ services:
       - key: PORT
         value: 8080
 
-  - type: static
+  - type: web
     name: job-portal-frontend
     env: static
     buildCommand: npm install && npm run build
