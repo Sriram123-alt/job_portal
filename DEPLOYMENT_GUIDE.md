@@ -6,7 +6,7 @@ This guide explains how to deploy the **Job Portal** (Spring Boot Backend + Reac
 
 - [GitHub Account](https://github.com/)
 - [Render Account](https://render.com/)
-- **PostgreSQL Database**: You will need a PostgreSQL database. You can create one on Render or use an external provider (like Neon, Supabase, etc.).
+- **PostgreSQL Database**: You will need a PostgreSQL database.
 
 ---
 
@@ -22,68 +22,53 @@ git push origin main
 
 ## 2. Deploy to Render (Blueprint)
 
-This project includes a `render.yaml` Blueprint file which automates the deployment of both Frontend and Backend.
+This project includes a `render.yaml` Blueprint file.
 
 1.  Log in to your [Render Dashboard](https://dashboard.render.com/).
 2.  Click **New +** and select **Blueprint**.
 3.  Connect your GitHub repository.
 4.  Give the blueprint a name (e.g., `job-portal-production`).
-5.  **Environment Variables**: You will likely be prompted to provide environment variables immediately or you can configure them later.
+5.  Click **Apply**.
 
 ### Critical Environment Variables for Backend
 
 The backend needs to connect to a database. You must provide these variables in the Render Dashboard for the **backend service**:
 
-| Variable | Description | Example Value |
-| :--- | :--- | :--- |
-| `DB_URL` | JDBC URL for PostgreSQL | `jdbc:postgresql://hostname:port/dbname` |
-| `DB_USERNAME` | Database Username | `renderer` |
-| `DB_PASSWORD` | Database Password | `your_secret_password` |
-| `JWT_SECRET` | Secret key for JWT | `your_long_secure_secret_key` |
-
-> **Note**: Update your `application.properties` or `application.yml` in the backend code to use these environment variables if they are currently hardcoded, or ensure the defaults work for you.
->
-> Example for `application.properties`:
-> ```properties
-> spring.datasource.url=${DB_URL}
-> spring.datasource.username=${DB_USERNAME}
-> spring.datasource.password=${DB_PASSWORD}
-> ```
+| Variable | Description |
+| :--- | :--- |
+| `DB_URL` | `jdbc:postgresql://hostname:port/dbname` |
+| `DB_USERNAME` | Database Username |
+| `DB_PASSWORD` | Database Password |
+| `JWT_SECRET` | Secret key for JWT |
 
 ---
 
-## 3. Manual Deployment (Alternative)
+## 3. Troubleshooting & "Stuck" Deployments
 
-If you prefer to deploy services manually without the Blueprint:
+If your deployment fails with `mvn: command not found` or you don't see the new service:
 
-### Backend (Web Service)
+### Force Blueprint Sync
+1. Go to your **Render Dashboard**.
+2. Click on the **Blueprints** tab (left sidebar).
+3. Click on your Blueprint name (e.g., `job-portal-production`).
+4. Click **Manual Sync** or check for a "Sync needed" message.
+5. This forces Render to re-read `render.yaml` and create the new `job-portal-backend-docker` service.
+
+### Manual Backend Deployment (Fail-safe)
+If the Blueprint refuses to work, deploy the Backend manually:
+
 1.  **New +** -> **Web Service**.
 2.  Connect Repo.
-3.  **Root Directory**: `backend`
-4.  **Runtime**: Java
-5.  **Build Command**: `mvn clean package -DskipTests`
-6.  **Start Command**: `java -jar target/*.jar`
-7.  Add Environment Variables as listed above.
-
-### Frontend (Static Site)
-1.  **New +** -> **Static Site**.
-2.  Connect Repo.
-3.  **Root Directory**: `frontend`
-4.  **Build Command**: `npm install && npm run build`
-5.  **Publish Directory**: `dist`
-6.  **Rewrite Rules**:
-    - Source: `/*`
-    - Destination: `/index.html`
-    - Action: `Rewrite`
+3.  **Name**: `manual-job-backend`
+4.  **Runtime**: **Docker** (Select "Docker" explicitly).
+5.  **Region**: Ohio (or any).
+6.  **Branch**: `main`.
+7.  **Root Directory**: `backend` (Important!).
+8.  **Dockerfile Path**: `Dockerfile` (or `backend/Dockerfile` if root is blank).
+9.  Click **Create Web Service**.
 
 ---
 
 ## 4. Frontend-Backend Connection
 
-Once both are deployed:
-1.  Get the **Backend URL** (e.g., `https://job-portal-backend.onrender.com`).
-2.  You likely need to update your Frontend to point to this URL instead of `localhost`.
-    - **Option 1 (Build Time)**: Update `vite.config.js` or your API service file in the frontend to use the production URL.
-    - **Option 2 (Environment Variable)**: If your frontend code uses `import.meta.env.VITE_API_URL`, set this variable in the Render Static Site settings.
-
-**Enjoy your deployed Job Portal!**
+Once deployed, update your Frontend to point to the Backend URL.
