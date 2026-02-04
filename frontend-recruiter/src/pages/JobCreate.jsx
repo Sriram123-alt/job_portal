@@ -37,7 +37,7 @@ const JobCreate = () => {
             navigate('/dashboard');
         } catch (err) {
             console.error(err);
-            toast.error("Failed to post job.");
+            toast.error(err.response?.data?.message || err.message || "Failed to post job.");
         }
     };
 
