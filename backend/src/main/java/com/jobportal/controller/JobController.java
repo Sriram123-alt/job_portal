@@ -1,8 +1,10 @@
 package com.jobportal.controller;
 
 import com.jobportal.entity.Job;
-import com.jobportal.entity.User;
-import com.jobportal.repository.UserRepository;
+import com.jobportal.entity.Recruiter;
+import com.jobportal.entity.Seeker;
+import com.jobportal.repository.RecruiterRepository;
+import com.jobportal.repository.SeekerRepository;
 import com.jobportal.service.JobService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +22,10 @@ public class JobController {
     private JobService jobService;
 
     @Autowired
-    private UserRepository userRepository;
+    private RecruiterRepository recruiterRepository;
+
+    @Autowired
+    private SeekerRepository seekerRepository;
 
     @GetMapping("/public")
     public List<Job> getAllJobs() {
@@ -34,18 +39,14 @@ public class JobController {
 
     @GetMapping("/my-jobs")
     public List<Job> getMyJobs() {
-        String username = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal())
-                .getUsername();
-        User recruiter = userRepository.findByUsername(username).orElseThrow();
-        return jobService.getJobsByRecruiter(recruiter.getId());
+        return jobService.getMyJobs();
     }
 
     @GetMapping("/recommendations")
     public List<Job> getRecommendations() {
         String username = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal())
                 .getUsername();
-        User user = userRepository.findByUsername(username).orElseThrow();
-        return jobService.getRecommendedJobs(user);
+        return jobService.getRecommendedJobs(username);
     }
 
     @GetMapping("/{id}")
@@ -54,8 +55,7 @@ public class JobController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteJob(@PathVariable Long id) { // Kept ResponseEntity<Void> for syntactic
-                                                                   // correctness
+    public ResponseEntity<Void> deleteJob(@PathVariable Long id) {
         jobService.deleteJob(id);
         return ResponseEntity.ok().build();
     }

@@ -48,8 +48,26 @@ public class ApplicationController {
     @PatchMapping("/{id}/status")
     public Application updateStatus(@PathVariable Long id,
             @RequestParam Application.Status status,
+            @RequestParam(required = false) String message,
+            @RequestParam(required = false) String testDateTime) {
+        return applicationService.updateStatus(id, status, message, testDateTime);
+    }
+
+    @GetMapping("/{id}")
+    public Application getApplicationById(@PathVariable Long id) {
+        return applicationService.getApplicationById(id);
+    }
+
+    @PostMapping("/{id}/test-score")
+    public Application saveTestScore(@PathVariable Long id, @RequestParam Integer score) {
+        return applicationService.saveTestScore(id, score);
+    }
+
+    @PostMapping("/{jobId}/schedule-all")
+    public List<Application> scheduleAllTests(@PathVariable Long jobId,
+            @RequestParam String testDateTime,
             @RequestParam(required = false) String message) {
-        return applicationService.updateStatus(id, status, message);
+        return applicationService.scheduleAllTests(jobId, testDateTime, message);
     }
 
     @GetMapping("/download/{filename:.+}")

@@ -30,7 +30,7 @@ public class Job {
 
     @ManyToOne
     @JoinColumn(name = "posted_by", nullable = false)
-    private User postedBy; // The Recruiter
+    private Recruiter postedBy; // The Recruiter
 
     @PrePersist
     protected void onCreate() {

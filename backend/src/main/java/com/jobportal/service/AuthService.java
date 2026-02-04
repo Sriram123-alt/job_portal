@@ -1,12 +1,10 @@
 package com.jobportal.service;
 
-import com.jobportal.entity.RecruiterProfile;
-import com.jobportal.entity.SeekerProfile;
-import com.jobportal.entity.User;
+import com.jobportal.entity.Recruiter;
+import com.jobportal.entity.Seeker;
 import com.jobportal.payload.AuthDto;
-import com.jobportal.repository.RecruiterProfileRepository;
-import com.jobportal.repository.SeekerProfileRepository;
-import com.jobportal.repository.UserRepository;
+import com.jobportal.repository.RecruiterRepository;
+import com.jobportal.repository.SeekerRepository;
 import com.jobportal.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,13 +21,10 @@ public class AuthService {
     private AuthenticationManager authenticationManager;
 
     @Autowired
-    private UserRepository userRepository;
+    private SeekerRepository seekerRepository;
 
     @Autowired
-    private SeekerProfileRepository seekerProfileRepository;
-
-    @Autowired
-    private RecruiterProfileRepository recruiterProfileRepository;
+    private RecruiterRepository recruiterRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -46,35 +41,34 @@ public class AuthService {
     }
 
     @org.springframework.transaction.annotation.Transactional
-    public User register(AuthDto.RegisterRequest registerRequest) {
-        if (userRepository.existsByUsername(registerRequest.getUsername())) {
+    public void register(AuthDto.RegisterRequest registerRequest) {
+        if (seekerRepository.existsByUsername(registerRequest.getUsername()) ||
+                recruiterRepository.existsByUsername(registerRequest.getUsername())) {
             throw new RuntimeException("Username is already taken!");
         }
 
         try {
-            User user = new User();
-            user.setUsername(registerRequest.getUsername());
-            user.setEmail(registerRequest.getEmail());
-            user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-            user.setRole(User.Role.valueOf(registerRequest.getRole().toUpperCase()));
+            String role = registerRequest.getRole().toUpperCase();
+            String encodedPassword = passwordEncoder.encode(registerRequest.getPassword());
 
-            // Save user first
-            user = userRepository.save(user);
-
-            // Create empty profile based on role
-            if (user.getRole() == User.Role.SEEKER) {
-                SeekerProfile seekerProfile = new SeekerProfile();
-                seekerProfile.setUser(user);
-                seekerProfileRepository.save(seekerProfile);
-            } else if (user.getRole() == User.Role.RECRUITER) {
-                RecruiterProfile recruiterProfile = new RecruiterProfile();
-                recruiterProfile.setUser(user);
-                recruiterProfileRepository.save(recruiterProfile);
+            if ("SEEKER".equals(role)) {
+                Seeker seeker = new Seeker();
+                seeker.setUsername(registerRequest.getUsername());
+                seeker.setEmail(registerRequest.getEmail());
+                seeker.setPassword(encodedPassword);
+                seekerRepository.save(seeker);
+            } else if ("RECRUITER".equals(role)) {
+                Recruiter recruiter = new Recruiter();
+                recruiter.setUsername(registerRequest.getUsername());
+                recruiter.setEmail(registerRequest.getEmail());
+                recruiter.setPassword(encodedPassword);
+                recruiterRepository.save(recruiter);
+            } else {
+                throw new RuntimeException("Invalid role provided");
             }
 
-            return user;
         } catch (Exception e) {
-            e.printStackTrace(); // Log the actual error
+            e.printStackTrace();
             throw new RuntimeException("Registration failed: " + e.getMessage());
         }
     }

@@ -1,6 +1,7 @@
 services:
+  # Backend Service (Docker)
   - type: web
-    name: job-portal-backend-docker
+    name: job-portal-backend
     runtime: docker
     region: ohio
     rootDir: backend
@@ -8,13 +9,48 @@ services:
     envVars:
       - key: PORT
         value: 8080
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
 
-  - type: web
-    name: job-portal-frontend
+  # Seeker Frontend (Static Site)
+  - type: static
+    name: job-seeker-app
     runtime: static
+    rootDir: frontend-seeker
     buildCommand: npm install && npm run build
-    staticPublishPath: ./dist
-    rootDir: frontend
+    publishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: job-portal-backend
+          property: url
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  # Recruiter Frontend (Static Site)
+  - type: static
+    name: job-recruiter-app
+    runtime: static
+    rootDir: frontend-recruiter
+    buildCommand: npm install && npm run build
+    publishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: job-portal-backend
+          property: url
     routes:
       - type: rewrite
         source: /*

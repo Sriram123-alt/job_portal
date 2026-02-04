@@ -1,5 +1,6 @@
 package com.jobportal.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,20 +11,31 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "recruiter_profiles")
+@Table(name = "recruiters")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RecruiterProfile {
+public class Recruiter {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
-    @JoinColumn(name = "user_id", unique = true, nullable = false)
-    private User user;
+    // --- User Fields ---
+    @Column(unique = true, nullable = false)
+    private String username;
 
+    @Column(nullable = false)
+    @JsonIgnore
+    private String password;
+
+    @Column(unique = true, nullable = false)
+    private String email;
+
+    @Column(name = "full_name")
+    private String fullName; // Added for consistency, can be Recruiter Name
+
+    // --- RecruiterProfile Fields ---
     @Column(name = "company_name", length = 200)
     private String companyName;
 

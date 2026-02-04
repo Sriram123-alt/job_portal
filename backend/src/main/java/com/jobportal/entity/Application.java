@@ -22,7 +22,7 @@ public class Application {
 
     @ManyToOne
     @JoinColumn(name = "seeker_id", nullable = false)
-    private User seeker;
+    private Seeker seeker;
 
     @Enumerated(EnumType.STRING)
     private Status status;
@@ -31,6 +31,18 @@ public class Application {
 
     @Column(name = "applied_at")
     private LocalDateTime appliedAt;
+
+    @Column(name = "test_date_time")
+    private LocalDateTime testDateTime;
+
+    @Column(name = "test_message", length = 500)
+    private String testMessage;
+
+    @Column(name = "test_score")
+    private Integer testScore;
+
+    @Column(name = "test_taken_at")
+    private LocalDateTime testTakenAt;
 
     @PrePersist
     protected void onCreate() {

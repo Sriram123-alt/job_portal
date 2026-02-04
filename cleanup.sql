@@ -1,0 +1,9 @@
+SET FOREIGN_KEY_CHECKS = 0;
+
+TRUNCATE TABLE applications;
+TRUNCATE TABLE jobs;
+TRUNCATE TABLE recruiter_profiles;
+TRUNCATE TABLE seeker_profiles;
+TRUNCATE TABLE users;
+
+SET FOREIGN_KEY_CHECKS = 1;

@@ -2,12 +2,12 @@ package com.jobportal.service;
 
 import com.jobportal.entity.Application;
 import com.jobportal.entity.Job;
-import com.jobportal.entity.SeekerProfile;
-import com.jobportal.entity.User;
+import com.jobportal.entity.Recruiter;
+import com.jobportal.entity.Seeker;
 import com.jobportal.repository.ApplicationRepository;
 import com.jobportal.repository.JobRepository;
-import com.jobportal.repository.SeekerProfileRepository;
-import com.jobportal.repository.UserRepository;
+import com.jobportal.repository.RecruiterRepository;
+import com.jobportal.repository.SeekerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,10 +33,10 @@ public class ApplicationService {
     private JobRepository jobRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    private SeekerRepository seekerRepository;
 
     @Autowired
-    private SeekerProfileRepository seekerProfileRepository;
+    private RecruiterRepository recruiterRepository;
 
     @Value("${file.upload-dir}")
     private String uploadDir;
@@ -44,16 +44,14 @@ public class ApplicationService {
     public Application applyForJob(Long jobId, MultipartFile resume) throws IOException {
         String username = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal())
                 .getUsername();
-        User seeker = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
+        Seeker seeker = seekerRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Seeker not found"));
+
         Job job = jobRepository.findById(jobId).orElseThrow(() -> new RuntimeException("Job not found"));
 
         if (applicationRepository.existsByJob_IdAndSeeker_Id(jobId, seeker.getId())) {
             throw new RuntimeException("You have already applied for this job");
         }
-
-        // Get seeker profile
-        SeekerProfile seekerProfile = seekerProfileRepository.findByUserId(seeker.getId())
-                .orElseThrow(() -> new RuntimeException("Seeker profile not found. Please upload your resume first."));
 
         // Save File or Use Existing
         String fileName;
@@ -65,8 +63,8 @@ public class ApplicationService {
             fileName = UUID.randomUUID() + "_" + resume.getOriginalFilename();
             Path filePath = uploadPath.resolve(fileName);
             Files.copy(resume.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-        } else if (seekerProfile.getResumeUrl() != null) {
-            fileName = seekerProfile.getResumeUrl();
+        } else if (seeker.getResumeUrl() != null) {
+            fileName = seeker.getResumeUrl();
         } else {
             throw new RuntimeException("No resume found. Please upload one to your profile first.");
         }
@@ -82,59 +80,124 @@ public class ApplicationService {
     public List<Application> getMyApplications() {
         String username = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal())
                 .getUsername();
-        User seeker = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
+        Seeker seeker = seekerRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Seeker not found"));
         return applicationRepository.findBySeeker_Id(seeker.getId());
     }
 
     public List<Application> getApplicationsForJob(Long jobId) {
         String username = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal())
                 .getUsername();
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
+
+        Recruiter recruiter = recruiterRepository.findByUsername(username).orElse(null);
+        boolean isAdmin = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal())
+                .getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
         Job job = jobRepository.findById(jobId).orElseThrow(() -> new RuntimeException("Job not found"));
 
-        if (!job.getPostedBy().getId().equals(user.getId()) && user.getRole() != User.Role.ADMIN) {
+        boolean isOwner = recruiter != null && job.getPostedBy().getId().equals(recruiter.getId());
+
+        if (!isOwner && !isAdmin) {
             throw new RuntimeException("Unauthorized: You are not the recruiter for this job");
         }
 
         return applicationRepository.findByJob_Id(jobId);
     }
 
-    @Autowired
-    private EmailService emailService;
-
-    public Application updateStatus(Long applicationId, Application.Status status, String message) {
+    public Application updateStatus(Long applicationId, Application.Status status, String message,
+            String testDateTime) {
         String username = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal())
                 .getUsername();
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
+        Recruiter recruiter = recruiterRepository.findByUsername(username).orElse(null);
+        boolean isAdmin = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal())
+                .getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
         Application app = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new RuntimeException("Application not found"));
 
-        if (!app.getJob().getPostedBy().getId().equals(user.getId()) && user.getRole() != User.Role.ADMIN) {
+        boolean isOwner = recruiter != null && app.getJob().getPostedBy().getId().equals(recruiter.getId());
+
+        if (!isOwner && !isAdmin) {
             throw new RuntimeException("Unauthorized to update application status");
         }
 
         app.setStatus(status);
-        Application savedApp = applicationRepository.save(app);
 
-        // Send Email if Shortlisted
-        if (status == Application.Status.SHORTLISTED) {
-            String subject = "Update on your application for " + app.getJob().getTitle();
-            String body = "Dear " + app.getSeeker().getFullName() + ",\n\n" +
-                    "Congratulations! You have been shortlisted for the position of " + app.getJob().getTitle() + " at "
-                    + app.getJob().getCompany() + ".\n\n";
-
-            if (message != null && !message.isEmpty()) {
-                body += message + "\n\n";
-            } else {
-                body += "The recruiter will contact you shortly with further details regarding the interview/test process.\n\n";
+        // Set test date/time and message if shortlisted
+        if (status == Application.Status.SHORTLISTED && testDateTime != null && !testDateTime.isEmpty()) {
+            try {
+                app.setTestDateTime(java.time.LocalDateTime.parse(testDateTime));
+                app.setTestMessage(message);
+            } catch (Exception e) {
+                System.out.println("Error parsing testDateTime: " + e.getMessage());
             }
-
-            body += "Best regards,\nRecruitment Team";
-
-            emailService.sendEmail(app.getSeeker().getEmail(), subject, body);
         }
 
-        return savedApp;
+        return applicationRepository.save(app);
+    }
+
+    public Application saveTestScore(Long applicationId, Integer score) {
+        String username = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal())
+                .getUsername();
+        Seeker seeker = seekerRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Seeker not found"));
+
+        Application app = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new RuntimeException("Application not found"));
+
+        // Verify the application belongs to this seeker
+        if (!app.getSeeker().getId().equals(seeker.getId())) {
+            throw new RuntimeException("Unauthorized: This application does not belong to you");
+        }
+
+        // Check if test was already taken
+        if (app.getTestScore() != null) {
+            throw new RuntimeException("Test has already been taken for this application");
+        }
+
+        app.setTestScore(score);
+        app.setTestTakenAt(java.time.LocalDateTime.now());
+
+        return applicationRepository.save(app);
+    }
+
+    public Application getApplicationById(Long applicationId) {
+        return applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new RuntimeException("Application not found"));
+    }
+
+    public List<Application> scheduleAllTests(Long jobId, String testDateTime, String message) {
+        String username = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal())
+                .getUsername();
+        Recruiter recruiter = recruiterRepository.findByUsername(username).orElse(null);
+        boolean isAdmin = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal())
+                .getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        Job job = jobRepository.findById(jobId).orElseThrow(() -> new RuntimeException("Job not found"));
+
+        boolean isOwner = recruiter != null && job.getPostedBy().getId().equals(recruiter.getId());
+
+        if (!isOwner && !isAdmin) {
+            throw new RuntimeException("Unauthorized: You are not the recruiter for this job");
+        }
+
+        List<Application> applications = applicationRepository.findByJob_Id(jobId);
+
+        for (Application app : applications) {
+            // Only schedule for those not already rejected
+            if (app.getStatus() != Application.Status.REJECTED) {
+                app.setStatus(Application.Status.SHORTLISTED);
+                if (testDateTime != null && !testDateTime.isEmpty()) {
+                    try {
+                        app.setTestDateTime(java.time.LocalDateTime.parse(testDateTime));
+                        app.setTestMessage(message);
+                    } catch (Exception e) {
+                        System.out.println("Error parsing testDateTime for app " + app.getId() + ": " + e.getMessage());
+                    }
+                }
+            }
+        }
+
+        return applicationRepository.saveAll(applications);
     }
 }
