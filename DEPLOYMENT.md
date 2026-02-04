@@ -13,22 +13,141 @@ Your application has 3 components:
 
 ---
 
-## 🚀 Recommended Deployment Platforms
+---
 
-### Backend Deployment Options
-- **Render** (Recommended - Free tier available)
-- **Railway** (Free tier with GitHub integration)
-- **Heroku** (Paid)
-- **AWS Elastic Beanstalk** (Paid)
+## 🚀 Deployment Options
 
-### Frontend Deployment Options
-- **Vercel** (Recommended - Free tier, best for React)
-- **Netlify** (Free tier available)
-- **GitHub Pages** (Free, static hosting)
+### Option 1: Docker (Recommended for Full Control)
+- **Local Development**: Docker Compose with MySQL
+- **Production**: Deploy to any Docker-supporting platform (DigitalOcean, AWS ECS, Azure, etc.)
+
+### Option 2: Platform as a Service (PaaS)
+- **Backend**: Render, Railway, Heroku
+- **Frontend**: Vercel, Netlify
+- **Database**: Managed MySQL/PostgreSQL
 
 ---
 
-## 1️⃣ Deploy Backend to Render
+## 1️⃣ Deploy with Docker (Easiest & Most Portable)
+
+### Local Development with Docker Compose
+
+#### Prerequisites
+- Install [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- Ensure Docker is running
+
+#### Step 1: Start the Application
+```bash
+# From project root directory
+docker-compose up -d
+```
+
+This will start:
+- ✅ MySQL database (port 3306)
+- ✅ Spring Boot backend (port 8080)
+
+#### Step 2: Check Status
+```bash
+# View running containers
+docker-compose ps
+
+# View logs
+docker-compose logs -f backend
+```
+
+#### Step 3: Update Environment Variables
+Edit `docker-compose.yml` to update:
+- `CORS_ALLOWED_ORIGINS` - Add your frontend URLs
+- `EMAIL_USERNAME` and `EMAIL_PASSWORD` - Your Gmail credentials
+- `JWT_SECRET` - Change in production!
+
+#### Step 4: Stop the Application
+```bash
+docker-compose down
+
+# To also remove volumes (database data)
+docker-compose down -v
+```
+
+### Production Docker Deployment
+
+#### Option A: Docker Hub + Any VPS (DigitalOcean, AWS, etc.)
+
+**Step 1: Build and Push Docker Image**
+```bash
+# Build the image
+cd backend
+docker build -t your-username/job-portal-backend:latest .
+
+# Login to Docker Hub
+docker login
+
+# Push to Docker Hub
+docker push your-username/job-portal-backend:latest
+```
+
+**Step 2: Deploy on VPS**
+```bash
+# SSH into your server
+ssh user@your-server-ip
+
+# Pull and run the image
+docker pull your-username/job-portal-backend:latest
+
+docker run -d \
+  --name job-portal-backend \
+  -p 8080:8080 \
+  -e DB_URL=jdbc:mysql://your-db-host:3306/job_portal \
+  -e DB_USERNAME=your_username \
+  -e DB_PASSWORD=your_password \
+  -e CORS_ALLOWED_ORIGINS=https://your-frontend.com \
+  -e JWT_SECRET=your_secure_secret \
+  -e EMAIL_USERNAME=your-email@gmail.com \
+  -e EMAIL_PASSWORD=your_app_password \
+  your-username/job-portal-backend:latest
+```
+
+#### Option B: Render with Docker
+
+1. Go to [render.com](https://render.com)
+2. **New +** → **Web Service**
+3. Connect your repository
+4. Configure:
+   - **Environment**: Docker
+   - **Dockerfile Path**: `backend/Dockerfile`
+   - Set environment variables (same as above)
+5. Deploy!
+
+#### Option C: Railway with Docker
+
+1. Go to [railway.app](https://railway.app)
+2. **New Project** → **Deploy from GitHub**
+3. Railway auto-detects Dockerfile
+4. Add environment variables
+5. Deploy!
+
+### Docker Commands Reference
+
+```bash
+# Build image manually
+docker build -t job-portal-backend ./backend
+
+# Run container
+docker run -p 8080:8080 job-portal-backend
+
+# View logs
+docker logs -f <container-id>
+
+# Stop container
+docker stop <container-id>
+
+# Remove container
+docker rm <container-id>
+```
+
+---
+
+## 2️⃣ Deploy Backend to Render (Without Docker)
 
 ### Step 1: Create Render Account
 1. Go to [render.com](https://render.com)
