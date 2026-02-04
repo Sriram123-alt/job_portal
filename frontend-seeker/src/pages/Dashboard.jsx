@@ -137,7 +137,7 @@ const Dashboard = () => {
     const fetchPublicJobs = async () => {
         try {
             // For Seekers with resumes, get recommendations.
-            const endpoint = (user.seekerProfile?.resumeUrl || user.seekerProfile?.skills)
+            const endpoint = (user.resumeUrl || user.skills)
                 ? '/api/jobs/recommendations'
                 : '/api/jobs/public';
 
@@ -163,9 +163,9 @@ const Dashboard = () => {
     return (
         <div>
             <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
-                <h1>{(user.seekerProfile && (user.seekerProfile.resumeUrl || user.seekerProfile.skills)) ? '🎯 Jobs Recommended for You' : '💼 Browse All Jobs'}</h1>
+                <h1>{(user.resumeUrl || user.skills) ? '🎯 Jobs Recommended for You' : '💼 Browse All Jobs'}</h1>
                 <p style={{ color: '#6b7280' }}>
-                    {(user.seekerProfile && (user.seekerProfile.resumeUrl || user.seekerProfile.skills)) ? 'Personalized matches based on your Smart Profile' : 'Explore opportunities and find your perfect role'}
+                    {(user.resumeUrl || user.skills) ? 'Personalized matches based on your Smart Profile' : 'Explore opportunities and find your perfect role'}
                 </p>
             </div>
 
@@ -217,7 +217,7 @@ const Dashboard = () => {
             )}
 
             {/* Resume Upload Prompt */}
-            {(!user.seekerProfile || !user.seekerProfile.resumeUrl) ? (
+            {(!user.resumeUrl) ? (
                 <div style={{ display: 'grid', placeItems: 'center', minHeight: '60vh' }}>
                     <div style={{ maxWidth: '600px', width: '100%', textAlign: 'center' }}>
                         <div style={{
