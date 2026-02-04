@@ -15,7 +15,9 @@ import JobDetails from './pages/JobDetails'
 import { AuthProvider, useAuth } from './context/AuthContext'
 
 if (import.meta.env.VITE_API_URL) {
-    axios.defaults.baseURL = import.meta.env.VITE_API_URL;
+    // Remove trailing slash and '/api' if present to avoid double '/api/api'
+    const apiUrl = import.meta.env.VITE_API_URL.replace(/\/+$/, '').replace(/\/api$/, '');
+    axios.defaults.baseURL = apiUrl;
 }
 
 const ProtectedRoute = ({ children }) => {

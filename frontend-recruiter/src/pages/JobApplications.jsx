@@ -311,7 +311,7 @@ const JobApplications = () => {
 
                                     <div style={{ marginTop: '0.5rem' }}>
                                         <a
-                                            href={`http://localhost:8080/api/applications/download/${app.resumePath}`}
+                                            href={`http://localhost:8080/api/applications/download/${app.resumePath}` && `${(import.meta.env.VITE_API_URL || 'http://localhost:8080').replace(/\/+$/, '').replace(/\/api$/, '')}/api/applications/download/${app.resumePath}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             style={{ color: '#2563eb', fontWeight: 'bold', textDecoration: 'none' }}

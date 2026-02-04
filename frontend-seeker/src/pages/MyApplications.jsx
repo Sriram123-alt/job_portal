@@ -222,7 +222,7 @@ const MyApplications = () => {
                                             <td style={{ padding: '1rem' }}>
                                                 {/* If resumePath is a URL (from parsing) vs file path */}
                                                 <a
-                                                    href={app.resumePath.startsWith('http') ? app.resumePath : `http://localhost:8080/api/applications/download/${app.resumePath}`}
+                                                    href={app.resumePath.startsWith('http') ? app.resumePath : `${(import.meta.env.VITE_API_URL || 'http://localhost:8080').replace(/\/+$/, '').replace(/\/api$/, '')}/api/applications/download/${app.resumePath}`}
                                                     target="_blank"
                                                     rel="noreferrer"
                                                     style={{ color: '#2563eb', textDecoration: 'none' }}

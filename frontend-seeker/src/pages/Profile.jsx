@@ -133,7 +133,7 @@ const Profile = () => {
                             <div>
                                 <strong style={{ color: '#374151' }}>Resume:</strong>
                                 <a
-                                    href={`http://localhost:8080/api/applications/download/${profile.resumeUrl}`}
+                                    href={`${(import.meta.env.VITE_API_URL || 'http://localhost:8080').replace(/\/+$/, '').replace(/\/api$/, '')}/api/applications/download/${profile.resumeUrl}`}
                                     target="_blank"
                                     rel="noreferrer"
                                     style={{ marginLeft: '0.5rem', color: '#2563eb', textDecoration: 'none' }}
