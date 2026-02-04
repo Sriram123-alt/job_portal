@@ -18,6 +18,10 @@ const Login = ({ role }) => {
 
             if (userRole !== role && userRole !== 'ADMIN') {
                 toast.error(`Access Denied. You are not a ${role === 'SEEKER' ? 'Job Seeker' : 'Recruiter'}.`);
+                // CRITICAL FIX: Clear the token immediately so they aren't "partially" logged in
+                localStorage.removeItem('token');
+                localStorage.removeItem('role');
+                window.location.reload(); // Force reset state
                 return;
             }
 

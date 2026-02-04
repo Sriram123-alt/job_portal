@@ -38,11 +38,15 @@ const JobCreate = () => {
         } catch (err) {
             console.error(err);
             if (err.response && err.response.status === 403) {
-                toast.error("Session expired or invalid role. Please login again.");
+                const debugInfo = err.response.data.authorities ? ` (Role: ${err.response.data.authorities})` : '';
+                toast.error("Access Denied" + debugInfo + ". Please login with a Recruiter account.");
+
+                console.error("403 Debug:", err.response.data);
+
                 // Optional: clear token specifically here if not handled globally
                 localStorage.removeItem('token');
                 localStorage.removeItem('role');
-                setTimeout(() => window.location.href = '/login', 2000);
+                setTimeout(() => window.location.href = '/login', 3000);
             } else {
                 toast.error(err.response?.data?.message || err.message || "Failed to post job.");
             }

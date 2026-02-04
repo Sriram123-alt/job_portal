@@ -25,6 +25,10 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomUserDetailsService userDetailsService;
+    @org.springframework.beans.factory.annotation.Autowired
+    private CustomAccessDeniedHandler accessDeniedHandler;
+    @org.springframework.beans.factory.annotation.Autowired
+    private JwtAuthenticationEntryPoint authenticationEntryPoint;
 
     @org.springframework.beans.factory.annotation.Value("${cors.allowed-origins}")
     private String allowedOrigins;
@@ -55,6 +59,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/applications/download/**").permitAll() // Allow resume downloads
                         .requestMatchers("/uploads/**").permitAll() // Serve static resumes
                         .anyRequest().authenticated())
+                .exceptionHandling(exception -> exception
+                        .accessDeniedHandler(accessDeniedHandler)
+                        .authenticationEntryPoint(authenticationEntryPoint))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
