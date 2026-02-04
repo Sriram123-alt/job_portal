@@ -50,4 +50,14 @@ public class AuthController {
         authService.register(registerRequest);
         return new ResponseEntity<>("User registered successfully", HttpStatus.CREATED);
     }
+
+    @GetMapping("/debug/me")
+    public ResponseEntity<?> debugMe() {
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication();
+        return ResponseEntity.ok(java.util.Map.of(
+                "name", auth.getName(),
+                "authorities", auth.getAuthorities(),
+                "principal", auth.getPrincipal()));
+    }
 }
