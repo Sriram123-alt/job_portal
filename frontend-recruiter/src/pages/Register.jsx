@@ -96,6 +96,9 @@ const Register = ({ role }) => {
                     <Link to="/" style={{ color: '#9ca3af', fontSize: '0.9rem' }}>
                         ← Back to Selection
                     </Link>
+                    <div style={{ marginTop: '20px', fontSize: '10px', color: '#ccc' }}>
+                        API: {axios.defaults.baseURL || 'Not Configured (Relative)'}
+                    </div>
                 </div>
             </div>
         </div>
