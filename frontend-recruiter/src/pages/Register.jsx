@@ -25,9 +25,9 @@ const Register = ({ role }) => {
             toast.success("Registration Successful! Please Login.");
             navigate('/login');
         } catch (err) {
-            console.error(err);
-            const errorMessage = err.response?.data?.message || err.response?.data || "Registration Failed. Please try again.";
-            toast.error(typeof errorMessage === 'string' ? errorMessage : "Registration Failed.");
+            console.error("Registration Error:", err);
+            const errorMessage = err.response?.data?.message || err.response?.data || err.message || "Registration Failed";
+            toast.error(typeof errorMessage === 'string' ? errorMessage : "Registration Failed (unknown error)");
         }
     };
 
