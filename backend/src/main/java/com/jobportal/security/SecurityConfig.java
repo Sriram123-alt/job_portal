@@ -66,7 +66,9 @@ public class SecurityConfig {
         // Read allowed origins from application.properties (supports environment
         // variable override)
         // This allows automatic deployment configuration without code changes
-        configuration.setAllowedOriginPatterns(Arrays.asList(allowedOrigins.split(",")));
+        // HARDCODED FIX: Allow ALL origins to strictly prevent environment variable
+        // overrides blocking connections
+        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
