@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import axios from 'axios'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import Navbar from './components/Navbar'
@@ -13,6 +14,9 @@ import Profile from './pages/Profile'
 import JobDetails from './pages/JobDetails'
 import { AuthProvider, useAuth } from './context/AuthContext'
 
+if (import.meta.env.VITE_API_URL) {
+    axios.defaults.baseURL = import.meta.env.VITE_API_URL;
+}
 
 const ProtectedRoute = ({ children }) => {
     const { user, loading } = useAuth();

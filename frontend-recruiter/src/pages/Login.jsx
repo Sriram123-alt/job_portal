@@ -24,7 +24,9 @@ const Login = ({ role }) => {
             toast.success("Login Successful!");
             navigate(redirectPath || '/dashboard');
         } catch (err) {
-            toast.error("Invalid credentials");
+            console.error("Login Error:", err);
+            const errorMessage = err.response?.data?.message || err.response?.data || err.message || "Login Failed";
+            toast.error(typeof errorMessage === 'string' ? errorMessage : "Login Failed");
         }
     };
 

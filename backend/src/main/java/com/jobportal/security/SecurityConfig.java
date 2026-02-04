@@ -50,6 +50,7 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests((authorize) -> authorize.requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/", "/api/health").permitAll() // Allow health checks
                         .requestMatchers("/api/jobs/public/**").permitAll()
                         .requestMatchers("/api/applications/download/**").permitAll() // Allow resume downloads
                         .requestMatchers("/uploads/**").permitAll() // Serve static resumes
