@@ -37,9 +37,9 @@ const JobCreate = () => {
             navigate('/dashboard');
         } catch (err) {
             console.error(err);
-            if (err.response && err.response.status === 403) {
+            if (err.response && (err.response.status === 403 || err.response.status === 401)) {
                 const debugInfo = err.response.data.authorities ? ` (Role: ${err.response.data.authorities})` : '';
-                toast.error("Access Denied" + debugInfo + ". Please login with a Recruiter account.");
+                toast.error("Session Expired / Access Denied" + debugInfo + ". Please login again.");
 
                 console.error("403 Debug:", err.response.data);
 
