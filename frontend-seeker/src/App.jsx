@@ -19,6 +19,11 @@ if (import.meta.env.VITE_API_URL) {
     const apiUrl = import.meta.env.VITE_API_URL.replace(/\/+$/, '').replace(/\/api$/, '');
     axios.defaults.baseURL = apiUrl;
     console.log("✅ App Configured with API URL:", apiUrl);
+
+    if (apiUrl.includes("your-backend-name")) {
+        console.error("❌ CRITICAL: VITE_API_URL is set to a placeholder!");
+        alert("CRITICAL DEPLOYMENT ERROR:\n\nYou have set VITE_API_URL to a placeholder 'your-backend-name'.\n\nPlease go to your Vercel/Render dashboard and change it to your REAL backend URL.");
+    }
 } else {
     console.warn("⚠️ VITE_API_URL is missing! Requests will be relative.");
 }
