@@ -17,6 +17,9 @@ if (import.meta.env.VITE_API_URL) {
     // Remove trailing slash and '/api' if present to avoid double '/api/api'
     const apiUrl = import.meta.env.VITE_API_URL.replace(/\/+$/, '').replace(/\/api$/, '');
     axios.defaults.baseURL = apiUrl;
+    console.log("✅ App Configured with API URL:", apiUrl);
+} else {
+    console.warn("⚠️ VITE_API_URL is missing! Requests will be relative.");
 }
 const ProtectedRoute = ({ children }) => {
     const { user, loading } = useAuth();
