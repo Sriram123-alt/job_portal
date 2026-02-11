@@ -46,66 +46,68 @@ public class JobService {
                 .getUsername();
         Recruiter recruiter = recruiterRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Recruiter not found"));
-        return jobRepository.findByPostedBy_Id(recruiter.getId());
+
+        return jobRepository.findByPostedBy(recruiter);
     }
 
     public Job getJobById(Long id) {
-        return jobRepository.findById(id).orElseThrow(() -> new RuntimeException("Job not found"));
+        return jobRepository.findById(id).orElse(null);
     }
 
     public void deleteJob(Long id) {
-        String username = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal())
-                .getUsername();
-
-        // Try finding as Recruiter first (most likely)
-        Recruiter recruiter = recruiterRepository.findByUsername(username).orElse(null);
-
-        Job job = jobRepository.findById(id).orElseThrow(() -> new RuntimeException("Job not found"));
-
-        boolean isOwner = recruiter != null && job.getPostedBy().getId().equals(recruiter.getId());
-
-        // Admin check (if we had an Admin entity or role check, but for now strict
-        // ownership)
-        // If we want to support Admin, we might need a separate Admin flow or check
-        // authorities
-        boolean isAdmin = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal())
-                .getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
-        if (isOwner || isAdmin) {
-            jobRepository.deleteById(id);
-        } else {
-            throw new RuntimeException("You are not authorized to delete this job");
-        }
-    }
-
-    public List<Job> getJobsByRecruiter(Long recruiterId) {
-        return jobRepository.findByPostedBy_Id(recruiterId);
+        jobRepository.deleteById(id);
     }
 
     public List<Job> getRecommendedJobs(String username) {
-        List<Job> allJobs = jobRepository.findAll();
+        Seeker seeker = seekerRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Seeker not found"));
 
-        Seeker seeker = seekerRepository.findByUsername(username).orElse(null);
-
-        if (seeker == null || seeker.getSkills() == null || seeker.getSkills().isEmpty()) {
-            return Collections.emptyList(); // No skills, no recommendations
+        String resumeSkills = seeker.getSkills();
+        if (resumeSkills == null || resumeSkills.isEmpty()) {
+            return Collections.emptyList();
         }
 
-        String[] skills = seeker.getSkills().toLowerCase().split(",\\s*");
-
+        List<Job> allJobs = jobRepository.findAll();
         return allJobs.stream()
                 .filter(job -> {
-                    String jobText = (job.getTitle() + " " + job.getDescription()).toLowerCase();
-                    if (job.getRequiredSkills() != null) {
-                        jobText += " " + job.getRequiredSkills().toLowerCase();
+                    String requiredSkills = job.getRequiredSkills();
+                    if (requiredSkills == null || requiredSkills.isEmpty()) {
+                        return false;
                     }
-
-                    for (String skill : skills) {
-                        if (jobText.contains(skill))
-                            return true;
+                    String[] seekerSkillArr = resumeSkills.toLowerCase().split(",\\s*");
+                    String[] jobSkillArr = requiredSkills.toLowerCase().split(",\\s*");
+                    for (String sSkill : seekerSkillArr) {
+                        for (String jSkill : jobSkillArr) {
+                            if (sSkill.trim().equals(jSkill.trim())) {
+                                return true;
+                            }
+                        }
                     }
                     return false;
                 })
                 .collect(Collectors.toList());
+    }
+
+    public Job updateJob(Long id, Job jobDetails) {
+        String username = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal())
+                .getUsername();
+        Recruiter recruiter = recruiterRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Recruiter not found"));
+
+        Job existingJob = jobRepository.findById(id).orElseThrow(() -> new RuntimeException("Job not found"));
+
+        // Security check: Only the recruiter who posted the job can update it
+        if (!existingJob.getPostedBy().getId().equals(recruiter.getId())) {
+            throw new RuntimeException("You are not authorized to update this job");
+        }
+
+        existingJob.setTitle(jobDetails.getTitle());
+        existingJob.setDescription(jobDetails.getDescription());
+        existingJob.setCompany(jobDetails.getCompany());
+        existingJob.setLocation(jobDetails.getLocation());
+        existingJob.setSalary(jobDetails.getSalary());
+        existingJob.setRequiredSkills(jobDetails.getRequiredSkills());
+
+        return jobRepository.save(existingJob);
     }
 }

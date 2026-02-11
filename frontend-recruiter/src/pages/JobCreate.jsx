@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 
 const JobCreate = () => {
+    const { id } = useParams();
+    const isEdit = !!id;
     const [formData, setFormData] = useState({
         title: '',
         company: '',
@@ -16,6 +18,24 @@ const JobCreate = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const token = localStorage.getItem('token');
+
+    useEffect(() => {
+        if (isEdit) {
+            fetchJob();
+        }
+    }, [id]);
+
+    const fetchJob = async () => {
+        try {
+            const res = await axios.get(`/api/jobs/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setFormData(res.data);
+        } catch (err) {
+            console.error(err);
+            toast.error("Failed to load job details for editing");
+        }
+    };
 
     // Protect route
     if (!user || user.role !== 'RECRUITER') {
@@ -30,25 +50,29 @@ const JobCreate = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('/api/recruiter/jobs', formData, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            toast.success("Job Posted Successfully!");
+            if (isEdit) {
+                await axios.put(`/api/recruiter/jobs/${id}`, formData, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                toast.success("Job Updated Successfully!");
+            } else {
+                await axios.post('/api/recruiter/jobs', formData, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                toast.success("Job Posted Successfully!");
+            }
             navigate('/dashboard');
         } catch (err) {
             console.error(err);
             if (err.response && (err.response.status === 403 || err.response.status === 401)) {
                 const debugInfo = err.response.data.authorities ? ` (Role: ${err.response.data.authorities})` : '';
                 toast.error("Session Expired / Access Denied" + debugInfo + ". Please login again.");
-
                 console.error("403 Debug:", err.response.data);
-
-                // Optional: clear token specifically here if not handled globally
                 localStorage.removeItem('token');
                 localStorage.removeItem('role');
                 setTimeout(() => window.location.href = '/login', 3000);
             } else {
-                toast.error(err.response?.data?.message || err.message || "Failed to post job.");
+                toast.error(err.response?.data?.message || err.message || `Failed to ${isEdit ? 'update' : 'post'} job.`);
             }
         }
     };
@@ -56,7 +80,7 @@ const JobCreate = () => {
     return (
         <div style={{ maxWidth: '600px', margin: '2rem auto', padding: '1rem' }}>
             <div className="card">
-                <h2 style={{ marginBottom: '1.5rem', color: '#1e40af' }}>Post a New Job</h2>
+                <h2 style={{ marginBottom: '1.5rem', color: '#1e40af' }}>{isEdit ? 'Edit Job' : 'Post a New Job'}</h2>
                 <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1rem' }}>
                     <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Job Title</label>
@@ -131,7 +155,7 @@ const JobCreate = () => {
                         />
                     </div>
                     <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                        <button type="submit" className="btn-primary" style={{ flex: 1 }}>Publish Job</button>
+                        <button type="submit" className="btn-primary" style={{ flex: 1 }}>{isEdit ? 'Update Job' : 'Publish Job'}</button>
                         <button type="button" onClick={() => navigate('/dashboard')} className="btn-secondary" style={{ flex: 1 }}>Cancel</button>
                     </div>
                 </form>

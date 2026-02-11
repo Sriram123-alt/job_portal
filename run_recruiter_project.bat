@@ -1,4 +1,5 @@
 @echo off
-echo Starting Recruiter Project on Port 3001...
+echo Starting Recruiter Frontend on Port 3001...
 cd frontend-recruiter
 npm run dev
+pause

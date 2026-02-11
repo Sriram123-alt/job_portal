@@ -75,6 +75,12 @@ function AppRoutes() {
                         </ProtectedRoute>
                     } />
 
+                    <Route path="/edit-job/:id" element={
+                        <ProtectedRoute>
+                            <JobCreate />
+                        </ProtectedRoute>
+                    } />
+
 
 
                     <Route path="/job/:jobId/applications" element={

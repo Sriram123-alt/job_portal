@@ -29,7 +29,7 @@ public class Job {
     private LocalDateTime postedAt;
 
     @ManyToOne
-    @JoinColumn(name = "posted_by", nullable = false)
+    @JoinColumn(name = "posted_by", nullable = false, foreignKey = @ForeignKey(name = "FK_job_recruiter"))
     private Recruiter postedBy; // The Recruiter
 
     @PrePersist

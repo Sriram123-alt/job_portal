@@ -91,6 +91,12 @@ const Dashboard = () => {
                                 </div>
                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                                     <button
+                                        onClick={() => navigate(`/edit-job/${job.id}`)}
+                                        style={{ backgroundColor: '#e0e7ff', color: '#4338ca', padding: '0.5rem', borderRadius: '0.375rem' }}
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
                                         onClick={() => handleDelete(job.id)}
                                         style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '0.5rem', borderRadius: '0.375rem' }}
                                     >
