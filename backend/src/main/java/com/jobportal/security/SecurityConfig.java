@@ -58,7 +58,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/jobs/public/**").permitAll()
                         .requestMatchers("/api/applications/download/**").permitAll() // Allow resume downloads
                         .requestMatchers("/uploads/**").permitAll() // Serve static resumes
-                        .requestMatchers("/api/recruiter/jobs").permitAll() // DEBUG: Manually validate in controller
+                        .requestMatchers("/api/recruiter/**").hasRole("RECRUITER")
                         .anyRequest().authenticated())
                 .exceptionHandling(exception -> exception
                         .accessDeniedHandler(accessDeniedHandler)
